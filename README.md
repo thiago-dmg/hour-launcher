@@ -37,6 +37,13 @@ npm run plan-day -- --activities config/activities.local.json
 npm run launch-day -- --activities config/activities.local.json
 ```
 
+Se o Azure CLI nao estiver instalado, informe a US principal manualmente:
+
+```bash
+npm run plan-day -- --activities config/activities.local.json --capex-work-item-id 172980
+npm run launch-day -- --activities config/activities.local.json --capex-work-item-id 172980
+```
+
 ## Observacoes do MVP
 
 - O lancamento processa um dia por vez.
