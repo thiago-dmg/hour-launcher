@@ -1,12 +1,13 @@
 {
   "azureDevOps": {
     "orgUrl": "https://dev.azure.com/dotzmkt",
-    "project": "NOME_DO_PROJETO",
+    "project": "Hour Launcher",
     "authMethod": "azure-cli",
     "defaultTeam": null
   },
   "sevenPace": {
-    "baseUrl": "https://dev.azure.com/dotzmkt",
+    "baseUrl": "https://dotzmkt.visualstudio.com/Tribos%20Dotz",
+    "timesheetUrl": "https://dotzmkt.visualstudio.com/Tribos%20Dotz/_apps/hub/7pace.Timetracker.Monthly",
     "mode": "playwright",
     "headless": false
   },

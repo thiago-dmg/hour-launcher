@@ -10,7 +10,7 @@ export function buildAuthSevenPaceCommand(): Command {
       const sevenPace = new SevenPacePlaywright({ ...config.sevenPace, headless: false });
       const context = await sevenPace.openContext();
       const page = await context.newPage();
-      await page.goto(`${config.sevenPace.baseUrl}/_apps/hub/7pace.Timetracker.TimetrackerHub`);
+      await page.goto(sevenPace.timesheetUrl());
       console.log("Conclua o login no navegador aberto. Pressione Ctrl+C quando terminar.");
       await page.waitForTimeout(10 * 60 * 1000);
       await context.close();

@@ -11,7 +11,7 @@ describe("config-loader", () => {
     const path = join(dir, "config.json");
     await writeFile(path, JSON.stringify({
       azureDevOps: { orgUrl: "https://dev.azure.com/dotzmkt", project: "P", authMethod: "azure-cli", defaultTeam: null },
-      sevenPace: { baseUrl: "https://dev.azure.com/dotzmkt", mode: "playwright", headless: false },
+      sevenPace: { baseUrl: "https://dev.azure.com/dotzmkt", timesheetUrl: "https://dotzmkt.visualstudio.com/Tribos%20Dotz/_apps/hub/7pace.Timetracker.Monthly", mode: "playwright", headless: false },
       time: { dailyTargetMinutes: 480, defaultDailyMinutes: 30, minimumEntryMinutes: 15 },
       defaults: { dailyWorkItemId: 171055, capexStrategy: "activeAssignedUserStory" },
       opexRules: { reunioes: { label: "Reunioes", workItemId: 171054 } },

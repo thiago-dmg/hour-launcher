@@ -9,6 +9,7 @@ export const configSchema = z.object({
   }),
   sevenPace: z.object({
     baseUrl: z.string().url(),
+    timesheetUrl: z.string().url().optional(),
     mode: z.literal("playwright"),
     headless: z.boolean()
   }),

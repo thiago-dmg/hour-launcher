@@ -28,6 +28,7 @@ export type HourLauncherConfig = {
   };
   sevenPace: {
     baseUrl: string;
+    timesheetUrl?: string;
     mode: "playwright";
     headless: boolean;
   };

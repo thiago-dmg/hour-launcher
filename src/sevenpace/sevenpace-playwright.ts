@@ -14,7 +14,7 @@ export class SevenPacePlaywright {
   async openTimesheet(date: string): Promise<{ context: BrowserContext; page: Page }> {
     const context = await this.openContext();
     const page = await context.newPage();
-    await page.goto(`${this.config.baseUrl}/_apps/hub/7pace.Timetracker.TimetrackerHub`, { waitUntil: "domcontentloaded" });
+    await page.goto(this.timesheetUrl(), { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
 
     const dateLocator = page.getByText(date, { exact: false }).first();
@@ -23,5 +23,9 @@ export class SevenPacePlaywright {
     }
 
     return { context, page };
+  }
+
+  timesheetUrl(): string {
+    return this.config.timesheetUrl ?? `${this.config.baseUrl}/_apps/hub/7pace.Timetracker.Monthly`;
   }
 }
