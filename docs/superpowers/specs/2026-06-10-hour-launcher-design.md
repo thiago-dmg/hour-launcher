@@ -75,7 +75,7 @@ O MVP inclui:
 - Arquivo de configuração JSON.
 - Arquivo JSON para atividades do dia.
 - Planejamento de um único dia por execução.
-- Cliente Azure DevOps REST API usando autenticação via PAT.
+- Cliente Azure DevOps REST API usando autenticação local via Azure CLI/Azure Identity quando possível, com PAT apenas como fallback.
 - Descoberta de User Stories ativas atribuídas ao usuário.
 - Engine de alocação garantindo que o total planejado seja igual à meta diária configurada.
 - Mapeamento OPEX para work item IDs fixos.
@@ -127,7 +127,7 @@ O arquivo principal de configuração ficará em `config/hour-launcher.json`. Um
   "azureDevOps": {
     "orgUrl": "https://dev.azure.com/dotzmkt",
     "project": "NOME_DO_PROJETO",
-    "authMethod": "pat",
+    "authMethod": "azure-cli",
     "defaultTeam": null
   },
   "sevenPace": {
@@ -218,22 +218,29 @@ O campo `workItemId` é opcional quando o tipo da atividade mapeia diretamente p
 
 ## Estratégia de Autenticação
 
-A Azure DevOps REST API usará Personal Access Token no MVP. O token será lido de `AZURE_DEVOPS_PAT`.
+A automação não deve pedir usuário e senha do Azure DevOps ou do 7pace.
 
-O arquivo de configuração não deve conter segredos.
+Para a parte visual, o Playwright deve reaproveitar uma sessão já autenticada do navegador. Na prática, o usuário faz login uma vez no Azure DevOps/7pace em uma janela controlada pelo Playwright, e a automação salva localmente o estado dessa sessão em `.auth/`. Nas próximas execuções, a automação abre o Azure DevOps já logado, desde que a sessão ainda esteja válida.
 
-A autenticação Playwright para o 7pace usará um perfil persistente local ou storage state em `.auth/`. O usuário executará primeiro um comando explícito de autenticação:
+O comando inicial de autenticação apenas abre o navegador para o usuário validar a sessão existente ou fazer login manualmente se necessário:
 
 ```bash
 npm run auth:sevenpace
 ```
 
-Estado de autenticação gerado, logs de execução e configurações locais com segredos devem ficar no `.gitignore`.
+Esse comando não coleta senha. Ele só permite que o login aconteça no fluxo normal da Microsoft/Azure DevOps e grava o storage state local depois que o usuário estiver autenticado.
+
+Para chamadas diretas à Azure DevOps REST API, o MVP terá duas possibilidades:
+
+- reutilizar autenticação local via Azure CLI/Azure Identity quando isso estiver disponível na máquina;
+- usar PAT via variável de ambiente `AZURE_DEVOPS_PAT` como fallback mais previsível para automação local.
+
+O arquivo de configuração não deve conter segredos. Estado de autenticação gerado, logs de execução e configurações locais com segredos devem ficar no `.gitignore`.
 
 Opções futuras de autenticação:
 
-- Azure CLI auth para Azure DevOps.
-- Azure Identity auth para Azure DevOps.
+- priorizar Azure CLI auth para Azure DevOps.
+- priorizar Azure Identity auth para Azure DevOps.
 - MCP Azure DevOps auth por servidor MCP configurado.
 
 ## Prevenção de Duplicidade
@@ -406,7 +413,8 @@ Depois que o MVP estiver confiável:
 
 - A organização Azure DevOps é `https://dev.azure.com/dotzmkt`.
 - O nome do projeto será informado na configuração local.
-- Autenticação por PAT é aceitável para a primeira implementação.
+- A automação visual reaproveitará uma sessão já autenticada no navegador, sem pedir usuário e senha.
+- Para chamadas REST API, Azure CLI/Azure Identity serão priorizados; PAT será mantido apenas como fallback local.
 - O 7pace pode ser operado pela UI web do Azure DevOps com Playwright.
 - Daily deve ser sempre adicionada, a menos que uma opção futura permita desativá-la.
 - O MVP deve processar um dia por vez.
