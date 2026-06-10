@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "init-config": "tsx src/cli/index.ts init-config",
+    "install:browsers": "playwright install chromium",
     "plan-day": "tsx src/cli/index.ts plan-day",
     "launch-day": "tsx src/cli/index.ts launch-day",
     "auth:sevenpace": "tsx src/cli/index.ts auth-sevenpace"
