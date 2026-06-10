@@ -13,9 +13,17 @@ export class SevenPacePlaywright {
 
   async openTimesheet(date: string): Promise<{ context: BrowserContext; page: Page }> {
     const context = await this.openContext();
-    const page = await context.newPage();
+    for (const existingPage of context.pages()) {
+      if (existingPage.url() !== "about:blank") {
+        await existingPage.close().catch(() => undefined);
+      }
+    }
+
+    const page = context.pages()[0] ?? await context.newPage();
+    console.log(`Abrindo 7pace em: ${this.timesheetUrl()}`);
     await page.goto(this.timesheetUrl(), { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
+    console.log(`URL final do 7pace: ${page.url()}`);
 
     const dateLocator = page.getByText(date, { exact: false }).first();
     if (await dateLocator.count()) {

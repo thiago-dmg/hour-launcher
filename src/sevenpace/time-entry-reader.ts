@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import type { WorkItemId } from "../types/domain.js";
 import { parseHourText } from "../allocation/time-math.js";
+import { getSevenPaceFrame } from "./sevenpace-frame.js";
 import { sevenPaceSelectors } from "./selectors.js";
 
 export type ExistingTimeEntry = {
@@ -12,7 +13,8 @@ export type ExistingTimeEntry = {
 };
 
 export async function readEntriesForDate(page: Page, date: string): Promise<ExistingTimeEntry[]> {
-  const rows = page.locator(sevenPaceSelectors.entryRow);
+  const frame = await getSevenPaceFrame(page);
+  const rows = frame.locator(sevenPaceSelectors.entryRow);
   const count = await rows.count();
   const entries: ExistingTimeEntry[] = [];
 
