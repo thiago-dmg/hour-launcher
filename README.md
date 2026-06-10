@@ -27,6 +27,7 @@ A automacao nao pede usuario e senha. O login visual acontece no navegador da Mi
 
 ```bash
 npm install
+npm run init-config
 npm test
 npm run build
 npm run auth:sevenpace

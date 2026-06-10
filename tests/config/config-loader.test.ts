@@ -31,4 +31,8 @@ describe("config-loader", () => {
     await expect(loadActivityFile(path)).resolves.toMatchObject({ date: "2026-06-10" });
     await rm(dir, { recursive: true, force: true });
   });
+
+  it("mostra instrucao clara quando o config local nao existe", async () => {
+    await expect(loadConfig("config/arquivo-inexistente.json")).rejects.toThrow("npm run init-config");
+  });
 });
