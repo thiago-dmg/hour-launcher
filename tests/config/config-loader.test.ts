@@ -13,7 +13,7 @@ describe("config-loader", () => {
       azureDevOps: { orgUrl: "https://dev.azure.com/dotzmkt", project: "P", authMethod: "azure-cli", defaultTeam: null },
       sevenPace: { baseUrl: "https://dev.azure.com/dotzmkt", timesheetUrl: "https://dotzmkt.visualstudio.com/Tribos%20Dotz/_apps/hub/7pace.Timetracker.Monthly", mode: "playwright", headless: false },
       time: { dailyTargetMinutes: 480, defaultDailyMinutes: 30, minimumEntryMinutes: 15 },
-      defaults: { dailyWorkItemId: 171055, capexStrategy: "activeAssignedUserStory" },
+      defaults: { dailyWorkItemId: 171055, capexStrategy: "activeAssignedUserStory", capexWorkItemId: 172980 },
       opexRules: { reunioes: { label: "Reunioes", workItemId: 171054 } },
       duplicatePolicy: { sameDateSameWorkItem: "update", allowMultipleEntriesSameWorkItem: false, validateFinalTotal: true }
     }));

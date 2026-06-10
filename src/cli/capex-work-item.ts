@@ -8,18 +8,9 @@ export type CapexOptions = {
 };
 
 export async function resolveCapexWorkItem(config: HourLauncherConfig, options: CapexOptions): Promise<WorkItemSummary> {
-  if (options.capexWorkItemId) {
-    const id = Number(options.capexWorkItemId);
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error(`--capex-work-item-id invalido: ${options.capexWorkItemId}`);
-    }
-
-    return {
-      id,
-      title: options.capexTitle ?? `US ${id}`,
-      state: "Manual",
-      workItemType: "User Story"
-    };
+  const manualId = options.capexWorkItemId ? Number(options.capexWorkItemId) : config.defaults.capexWorkItemId;
+  if (manualId) {
+    return manualCapexWorkItem(manualId, options.capexTitle);
   }
 
   try {
@@ -46,6 +37,18 @@ function isExecutableMissingError(error: unknown, executable: string): boolean {
   return error instanceof Error
     && "code" in error
     && (error as NodeJS.ErrnoException).code === "ENOENT"
-    && "path" in error
-    && (error as NodeJS.ErrnoException).path === executable;
+    && (!("path" in error) || (error as NodeJS.ErrnoException).path === executable);
+}
+
+function manualCapexWorkItem(id: number, title?: string): WorkItemSummary {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error(`US CAPEX invalida: ${id}`);
+  }
+
+  return {
+    id,
+    title: title ?? `US ${id}`,
+    state: "Manual",
+    workItemType: "User Story"
+  };
 }

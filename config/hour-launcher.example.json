@@ -7,7 +7,7 @@
   },
   "sevenPace": {
     "baseUrl": "https://dotzmkt.visualstudio.com/Tribos%20Dotz",
-    "timesheetUrl": "https://dotzmkt.visualstudio.com/Tribos%20Dotz/_apps/hub/7pace.Timetracker.Monthly",
+    "timesheetUrl": "https://dotzmkt.visualstudio.com/Tribos%20Dotz/_apps/hub/7pace.Timetracker.Timesheet",
     "mode": "playwright",
     "headless": false
   },
@@ -18,7 +18,8 @@
   },
   "defaults": {
     "dailyWorkItemId": 171055,
-    "capexStrategy": "activeAssignedUserStory"
+    "capexStrategy": "activeAssignedUserStory",
+    "capexWorkItemId": null
   },
   "opexRules": {
     "sustentacao": { "label": "Sustentacao", "featureId": 171057, "createUserStory": true },

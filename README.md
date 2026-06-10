@@ -44,6 +44,16 @@ npm run plan-day -- --activities config/activities.local.json --capex-work-item-
 npm run launch-day -- --activities config/activities.local.json --capex-work-item-id 172980
 ```
 
+Ou deixe uma US padrao em `config/hour-launcher.json`:
+
+```json
+"defaults": {
+  "dailyWorkItemId": 171055,
+  "capexStrategy": "activeAssignedUserStory",
+  "capexWorkItemId": 172980
+}
+```
+
 ## Observacoes do MVP
 
 - O lancamento processa um dia por vez.
