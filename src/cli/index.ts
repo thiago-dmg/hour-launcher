@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { buildAuthSevenPaceCommand } from "./commands/auth-sevenpace.js";
+import { buildLaunchDayCommand } from "./commands/launch-day.js";
 import { buildPlanDayCommand } from "./commands/plan-day.js";
 
 const program = new Command();
@@ -10,6 +11,7 @@ program
   .version("0.1.0");
 
 program.addCommand(buildPlanDayCommand());
+program.addCommand(buildLaunchDayCommand());
 program.addCommand(buildAuthSevenPaceCommand());
 
 await program.parseAsync(process.argv);
