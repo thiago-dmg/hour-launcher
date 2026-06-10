@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.auth/
+.runs/
+config/hour-launcher.json
+config/activities.local.json
+.env
+playwright-report/
+test-results/
