@@ -1,126 +1,126 @@
-# Hour Launcher Design
+# Design do Hour Launcher
 
-## Goal
+## Objetivo
 
-Build a TypeScript automation that plans and launches daily work hours in Azure DevOps + 7pace TimeTracker, reducing manual entry while keeping a required human review step before saving.
+Criar uma automação em TypeScript para planejar e lançar horas diárias no Azure DevOps + 7pace TimeTracker, reduzindo o lançamento manual sem remover a etapa obrigatória de revisão humana antes de salvar.
 
-The MVP must support one work day at a time, automatically include Daily time, distribute the remaining time across CAPEX/OPEX work items, avoid duplicate entries, and validate that the final daily total is exactly 8 hours.
+O MVP deve processar um dia por vez, incluir automaticamente o tempo de Daily, distribuir o restante entre itens CAPEX/OPEX, evitar lançamentos duplicados e validar que o total final do dia seja exatamente 8 horas.
 
-## Current Context
+## Contexto Atual
 
-The repository starts empty except for Git metadata. The first deliverable is a new TypeScript CLI application.
+O repositório começa vazio, exceto pelos metadados do Git. O primeiro entregável será uma nova aplicação CLI em TypeScript.
 
-The user works 8 hours per day. A normal day is:
+O usuário trabalha 8 horas por dia. Um dia normal é:
 
-- 0h30 Daily.
-- 7h30 on the main active User Story from the Azure DevOps board.
+- 0h30 de Daily.
+- 7h30 na User Story principal ativa no board do Azure DevOps.
 
-Some days include meetings, war rooms, refinements, support work, GLPI tickets, DLQs, training, feedback, or corporate meetings. Those activities reduce the remaining CAPEX time. The system must calculate the remainder and keep the total at exactly 8 hours.
+Alguns dias incluem reuniões, war rooms, refinamentos, sustentação, chamados GLPI, DLQs, treinamentos, feedbacks ou reuniões corporativas. Essas atividades reduzem o tempo restante de CAPEX. O sistema deve calcular o restante e manter o total em exatamente 8 horas.
 
-## Recommended Architecture
+## Arquitetura Recomendada
 
-Use a hybrid architecture:
+Usar uma arquitetura híbrida:
 
-- Azure DevOps REST API for deterministic discovery of organization data, project data, iterations, work items, assigned User Stories, and active board items.
-- Playwright for 7pace TimeTracker interactions, because 7pace availability through API is not confirmed.
-- A TypeScript domain core for planning, mapping, duplicate policy, validation, and review rendering.
-- MCP Azure DevOps support as a later optional provider, not as an MVP dependency.
+- Azure DevOps REST API para descoberta determinística de organização, projeto, iterações, work items, User Stories atribuídas e itens ativos do board.
+- Playwright para interações com o 7pace TimeTracker, porque ainda não foi confirmado se existe API do 7pace disponível no ambiente.
+- Um core de domínio em TypeScript para planejamento, mapeamento, política de duplicidade, validação e renderização da revisão.
+- Suporte ao MCP do Azure DevOps como provider opcional futuro, não como dependência do MVP.
 
-This keeps the automation scriptable and testable while limiting browser automation to the place where it is most likely required: 7pace time entry.
+Essa abordagem mantém a automação previsível, testável e executável por script, limitando a automação de navegador ao ponto onde ela provavelmente é necessária: o lançamento de horas no 7pace.
 
-## Alternatives Considered
+## Alternativas Consideradas
 
-### Playwright Only
+### Apenas Playwright
 
-This is possible but too fragile. It would require browser navigation for both Azure DevOps discovery and 7pace entry. Any UI change in either system could break discovery, selection, or entry writing.
+É possível, mas frágil demais. Exigiria navegação por navegador tanto para descobrir dados no Azure DevOps quanto para lançar no 7pace. Qualquer mudança de UI em um dos sistemas poderia quebrar descoberta, seleção ou escrita.
 
 ### Azure DevOps API + Playwright
 
-This is the recommended MVP. Azure DevOps REST API handles structured data reliably. Playwright handles 7pace entry creation and update. This gives the best balance of reliability, implementation effort, and local usability.
+É a recomendação para o MVP. A REST API do Azure DevOps trata dados estruturados de forma confiável. O Playwright cuida da criação e atualização dos lançamentos no 7pace. Essa opção oferece o melhor equilíbrio entre confiabilidade, esforço de implementação e uso local.
 
 ### Azure DevOps MCP + Playwright
 
-This is useful for agent-assisted workflows but less ideal as the internal runtime dependency for a repeatable automation. MCP can be added later as a provider or assistant-facing interface.
+É útil para fluxos assistidos por agente/IA, mas menos ideal como dependência interna de runtime para uma automação repetível. O MCP pode ser adicionado depois como provider ou interface para uso assistido.
 
 ### Azure DevOps API + MCP + Playwright
 
-This is a good final-state architecture. The MVP should start with direct API calls and add MCP only after the core workflow is stable.
+É uma boa arquitetura final. O MVP deve começar com chamadas diretas à API e adicionar MCP somente depois que o fluxo principal estiver estável.
 
-## High-Level Flow
+## Fluxo Geral
 
-1. User runs the CLI for a target date.
-2. CLI loads JSON configuration.
-3. Azure DevOps client authenticates and finds:
-   - authenticated user;
-   - current sprint;
-   - active User Stories assigned to the user;
-   - candidate CAPEX User Story from the board.
-4. Input activity list is loaded from JSON or CLI arguments.
-5. Allocation engine adds the default Daily entry.
-6. OPEX mapper maps explicit activities to configured OPEX work items or Features.
-7. Allocation engine assigns the remaining minutes to CAPEX work items.
-8. Review renderer prints the proposed entries and total.
-9. User confirms or cancels.
-10. 7pace adapter reads existing entries for the date.
-11. Duplicate policy decides whether to update, skip, or fail on existing entries.
-12. 7pace adapter writes entries with Playwright.
-13. Adapter reads the day again and validates the total equals 8 hours.
-14. Local run log records the plan, result, and validation status.
+1. O usuário roda a CLI para uma data alvo.
+2. A CLI carrega a configuração JSON.
+3. O cliente Azure DevOps autentica e encontra:
+   - usuário autenticado;
+   - sprint atual;
+   - User Stories ativas atribuídas ao usuário;
+   - User Story CAPEX candidata a partir do board.
+4. A lista de atividades do dia é carregada de um JSON ou de argumentos da CLI.
+5. A engine de alocação adiciona o lançamento padrão de Daily.
+6. O mapper OPEX converte atividades explícitas para work items ou Features OPEX configuradas.
+7. A engine de alocação atribui os minutos restantes aos itens CAPEX.
+8. O renderizador de revisão imprime os lançamentos propostos e o total.
+9. O usuário confirma ou cancela.
+10. O adapter do 7pace lê os lançamentos existentes na data.
+11. A política de duplicidade decide se deve atualizar, ignorar ou falhar quando encontrar lançamentos existentes.
+12. O adapter do 7pace escreve os lançamentos com Playwright.
+13. O adapter lê novamente o dia e valida que o total é 8 horas.
+14. O log local registra o plano, o resultado e o status da validação.
 
-## MVP Scope
+## Escopo do MVP
 
-The MVP will include:
+O MVP inclui:
 
-- TypeScript CLI.
-- JSON config file.
-- JSON activity input file.
-- Daily single-date planning.
-- Azure DevOps REST API client using PAT authentication.
-- Discovery of assigned active User Stories.
-- Allocation engine that guarantees the planned total equals the configured daily target.
-- OPEX mapping for fixed work item IDs.
-- Terminal review mode.
-- Playwright browser session for 7pace.
-- Existing-entry detection for same date and work item.
-- Update or fail duplicate handling based on config.
-- Final validation that the day total is exactly 8 hours.
+- CLI em TypeScript.
+- Arquivo de configuração JSON.
+- Arquivo JSON para atividades do dia.
+- Planejamento de um único dia por execução.
+- Cliente Azure DevOps REST API usando autenticação via PAT.
+- Descoberta de User Stories ativas atribuídas ao usuário.
+- Engine de alocação garantindo que o total planejado seja igual à meta diária configurada.
+- Mapeamento OPEX para work item IDs fixos.
+- Modo revisão no terminal.
+- Sessão Playwright para o 7pace.
+- Detecção de lançamento existente pela combinação de data + work item.
+- Tratamento de duplicidade por atualização ou falha, conforme configuração.
+- Validação final de que o total do dia é exatamente 8 horas.
 
-The MVP will not include:
+O MVP não inclui:
 
-- Automatic creation of OPEX User Stories under Features.
-- Multiple-day or weekly batch entry.
-- Calendar integration.
-- 7pace direct API integration.
-- MCP provider implementation.
-- Advanced priority heuristics.
-- Weekly or monthly compensation.
+- Criação automática de User Stories OPEX dentro de Features.
+- Lançamento de múltiplos dias ou lote semanal.
+- Integração com calendário.
+- Integração direta com API do 7pace.
+- Implementação de provider MCP.
+- Heurísticas avançadas de priorização.
+- Compensação semanal ou mensal.
 
-## Domain Rules
+## Regras de Domínio
 
-The daily target defaults to 480 minutes.
+A meta diária padrão é 480 minutos.
 
-Daily defaults to 30 minutes and maps to work item 171055.
+Daily tem padrão de 30 minutos e mapeia para o work item 171055.
 
-Anything not explicitly listed as OPEX is CAPEX and should be launched against the active board User Story.
+Tudo que não estiver explicitamente listado como OPEX é CAPEX e deve ser lançado contra a User Story ativa do board.
 
-OPEX mappings:
+Mapeamentos OPEX:
 
-| Activity | Target |
+| Atividade | Destino |
 | --- | --- |
-| Sustentacao | Feature 171057, create User Story later |
-| Tarefa | Feature 171058, create User Story later |
-| Refactor / Manutencao | Feature 171466, create User Story later |
-| Treinamento / Feedback / Reuniao corporativa | US 171056 |
+| Sustentação | Feature 171057, criar User Story futuramente |
+| Tarefa | Feature 171058, criar User Story futuramente |
+| Refactor / Manutenção | Feature 171466, criar User Story futuramente |
+| Treinamento / Feedback / Reunião corporativa | US 171056 |
 | Refinamento / Planejamento / Daily | US 171055 |
-| Reunioes | US 171054 |
+| Reuniões | US 171054 |
 | DLQs | US 171802 |
 | Chamados GLPI | US 171804 |
 
-For MVP, mappings that require creating a User Story under a Feature should be rejected with a clear message unless the user provides a concrete work item override in the activity input. Automatic creation is planned for a later release.
+No MVP, mapeamentos que exigem criação de User Story dentro de uma Feature devem falhar com uma mensagem clara, exceto quando o usuário informar um work item concreto na atividade de entrada. A criação automática fica planejada para uma versão posterior.
 
-## Configuration Model
+## Modelo de Configuração
 
-The main config file will live at `config/hour-launcher.json`. A checked-in `config/hour-launcher.example.json` will document the expected shape.
+O arquivo principal de configuração ficará em `config/hour-launcher.json`. Um arquivo versionado `config/hour-launcher.example.json` documentará o formato esperado.
 
 ```json
 {
@@ -146,7 +146,7 @@ The main config file will live at `config/hour-launcher.json`. A checked-in `con
   },
   "opexRules": {
     "sustentacao": {
-      "label": "Sustentacao",
+      "label": "Sustentação",
       "featureId": 171057,
       "createUserStory": true
     },
@@ -156,12 +156,12 @@ The main config file will live at `config/hour-launcher.json`. A checked-in `con
       "createUserStory": true
     },
     "refactorManutencao": {
-      "label": "Refactor / Manutencao",
+      "label": "Refactor / Manutenção",
       "featureId": 171466,
       "createUserStory": true
     },
     "treinamentoFeedbackReuniaoCorporativa": {
-      "label": "Treinamento / Feedback / Reuniao corporativa",
+      "label": "Treinamento / Feedback / Reunião corporativa",
       "workItemId": 171056
     },
     "refinamentoPlanejamentoDaily": {
@@ -169,7 +169,7 @@ The main config file will live at `config/hour-launcher.json`. A checked-in `con
       "workItemId": 171055
     },
     "reunioes": {
-      "label": "Reunioes",
+      "label": "Reuniões",
       "workItemId": 171054
     },
     "dlqs": {
@@ -189,11 +189,11 @@ The main config file will live at `config/hour-launcher.json`. A checked-in `con
 }
 ```
 
-## Activity Input Model
+## Modelo de Entrada de Atividades
 
-Daily does not need to be entered manually. It is added by default unless disabled in a later version.
+Daily não precisa ser informada manualmente. Ela é adicionada por padrão, a menos que uma versão futura adicione uma opção para desativá-la.
 
-Example activity file:
+Exemplo de arquivo de atividades:
 
 ```json
 {
@@ -202,108 +202,108 @@ Example activity file:
     {
       "type": "warRoom",
       "minutes": 60,
-      "description": "War room producao",
+      "description": "War room produção",
       "workItemId": 171054
     },
     {
       "type": "reunioes",
       "minutes": 30,
-      "description": "Alinhamento tecnico"
+      "description": "Alinhamento técnico"
     }
   ]
 }
 ```
 
-The `workItemId` field is optional when the activity type maps directly to an OPEX User Story. It is required in MVP for OPEX types that map only to a Feature and require future User Story creation.
+O campo `workItemId` é opcional quando o tipo da atividade mapeia diretamente para uma User Story OPEX. Ele é obrigatório no MVP para tipos OPEX que mapeiam apenas para Feature e exigem criação futura de User Story.
 
-## Authentication Strategy
+## Estratégia de Autenticação
 
-Azure DevOps REST API will use a Personal Access Token in the MVP. The token is read from `AZURE_DEVOPS_PAT`.
+A Azure DevOps REST API usará Personal Access Token no MVP. O token será lido de `AZURE_DEVOPS_PAT`.
 
-The config file must not contain secrets.
+O arquivo de configuração não deve conter segredos.
 
-Playwright authentication for 7pace will use a persistent local browser profile or storage state under `.auth/`. The user will run an explicit authentication command first:
+A autenticação Playwright para o 7pace usará um perfil persistente local ou storage state em `.auth/`. O usuário executará primeiro um comando explícito de autenticação:
 
 ```bash
 npm run auth:sevenpace
 ```
 
-Generated auth state, run logs, and local config with secrets must be gitignored.
+Estado de autenticação gerado, logs de execução e configurações locais com segredos devem ficar no `.gitignore`.
 
-Future authentication options:
+Opções futuras de autenticação:
 
-- Azure CLI auth for Azure DevOps.
-- Azure Identity auth for Azure DevOps.
-- MCP Azure DevOps auth through configured MCP server.
+- Azure CLI auth para Azure DevOps.
+- Azure Identity auth para Azure DevOps.
+- MCP Azure DevOps auth por servidor MCP configurado.
 
-## Duplicate Prevention
+## Prevenção de Duplicidade
 
-Before writing entries, the 7pace adapter must read existing entries for the target date.
+Antes de escrever lançamentos, o adapter do 7pace deve ler os lançamentos existentes na data alvo.
 
-Entries are compared by:
+Entradas são comparadas por:
 
-- date;
+- data;
 - work item ID;
-- optionally description when multiple entries for the same work item are allowed.
+- opcionalmente descrição, quando múltiplas entradas para o mesmo work item forem permitidas.
 
-MVP default:
+Padrão do MVP:
 
-- if an entry exists for the same date and work item, update it;
-- if multiple existing entries make the update ambiguous, fail and show the existing entries;
-- after writing, read the day again and validate the final total.
+- se existir uma entrada na mesma data e no mesmo work item, atualizá-la;
+- se múltiplas entradas existentes tornarem a atualização ambígua, falhar e exibir essas entradas;
+- depois de escrever, ler novamente o dia e validar o total final.
 
-A local run log will store:
+Um log local armazenará:
 
-- target date;
-- planned entries;
-- hash of the plan;
-- operation result;
-- final validated total.
+- data alvo;
+- lançamentos planejados;
+- hash do plano;
+- resultado da operação;
+- total final validado.
 
-The local run log is an audit aid, not the source of truth. 7pace remains the source of truth for duplicate detection.
+O log local é apoio de auditoria, não fonte da verdade. O 7pace continua sendo a fonte da verdade para detecção de duplicidade.
 
-## Error Handling
+## Tratamento de Erros
 
-The CLI should fail before writing if:
+A CLI deve falhar antes de escrever se:
 
-- config is invalid;
-- target date is invalid;
-- daily target cannot be reached exactly;
-- explicit activities exceed the daily target;
-- no active CAPEX User Story can be found;
-- OPEX activity requires User Story creation but no concrete work item ID was provided;
-- duplicate existing entries are ambiguous;
-- user cancels review.
+- a configuração for inválida;
+- a data alvo for inválida;
+- a meta diária não puder ser atingida exatamente;
+- as atividades explícitas excederem a meta diária;
+- nenhuma User Story CAPEX ativa for encontrada;
+- uma atividade OPEX exigir criação de User Story e nenhum work item concreto for informado;
+- lançamentos existentes forem ambíguos;
+- o usuário cancelar a revisão.
 
-The CLI should fail after writing if:
+A CLI deve falhar depois de escrever se:
 
-- Playwright cannot confirm save;
-- final 7pace readback does not equal the configured daily target.
+- o Playwright não conseguir confirmar o salvamento;
+- a leitura final do 7pace não for igual à meta diária configurada.
 
-In post-write validation failures, the CLI must print enough context for manual correction.
+Em falhas de validação pós-escrita, a CLI deve imprimir contexto suficiente para correção manual.
 
-## Review Mode
+## Modo Revisão
 
-Review is mandatory in MVP.
+A revisão é obrigatória no MVP.
 
-Example:
+Exemplo:
 
 ```text
 Data: 10/06/2026
 
 Daily: 0h30 -> US 171055
 War Room: 1h00 -> US 171054
-Reuniao: 0h30 -> US 171054
+Reunião: 0h30 -> US 171054
 US 172980: 6h00 -> CAPEX
 
 Total: 8h00
 
-Confirmar? (Sim/Nao)
+Confirmar? (Sim/Não)
 ```
 
-The CLI only launches entries after explicit confirmation.
+A CLI só lança as entradas após confirmação explícita.
 
-## Folder Structure
+## Estrutura de Pastas
 
 ```text
 hour-launcher/
@@ -366,47 +366,47 @@ hour-launcher/
   README.md
 ```
 
-## Testing Strategy
+## Estratégia de Testes
 
-Unit tests:
+Testes unitários:
 
-- time math formatting and parsing;
-- OPEX rule mapping;
-- allocation success;
-- allocation failure when activities exceed target;
-- allocation failure when no CAPEX target exists;
-- duplicate policy decisions.
+- formatação e parsing de tempo;
+- mapeamento de regras OPEX;
+- alocação com sucesso;
+- falha de alocação quando atividades excedem a meta;
+- falha de alocação quando não existe alvo CAPEX;
+- decisões da política de duplicidade.
 
-Integration-style tests:
+Testes em estilo integração:
 
-- config loading and validation;
-- mocked Azure DevOps client responses;
-- Playwright adapter tests can be added after selectors are confirmed against the real 7pace UI.
+- carregamento e validação da configuração;
+- respostas mockadas do cliente Azure DevOps;
+- testes do adapter Playwright após confirmação dos seletores reais da UI do 7pace.
 
-Manual verification:
+Verificação manual:
 
-- authenticate 7pace in a visible browser;
-- run `plan-day` and inspect output;
-- run `launch-day` against a safe date or test work item;
-- confirm readback total equals 8 hours.
+- autenticar no 7pace em navegador visível;
+- rodar `plan-day` e inspecionar a saída;
+- rodar `launch-day` contra uma data segura ou work item de teste;
+- confirmar que a leitura final totaliza 8 horas.
 
-## Future Evolution
+## Evolução Futura
 
-After the MVP works reliably:
+Depois que o MVP estiver confiável:
 
-1. Add automatic User Story creation under OPEX Features.
-2. Add multi-day and weekly batch mode.
-3. Add Azure CLI or Azure Identity auth.
-4. Add optional MCP Azure DevOps provider.
-5. Investigate 7pace API support and replace Playwright writes when safe.
-6. Add calendar import for meetings.
-7. Add smarter CAPEX distribution across multiple active User Stories.
+1. Adicionar criação automática de User Stories sob Features OPEX.
+2. Adicionar modo de lote para múltiplos dias ou semana.
+3. Adicionar autenticação via Azure CLI ou Azure Identity.
+4. Adicionar provider opcional para MCP Azure DevOps.
+5. Investigar suporte à API do 7pace e substituir escritas via Playwright quando for seguro.
+6. Adicionar importação de calendário para reuniões.
+7. Adicionar distribuição CAPEX mais inteligente entre múltiplas User Stories ativas.
 
-## Open Assumptions
+## Premissas Abertas
 
-- The Azure DevOps organization is `https://dev.azure.com/dotzmkt`.
-- Project name will be provided in local config.
-- PAT authentication is acceptable for the first implementation.
-- 7pace can be operated through the Azure DevOps web UI with Playwright.
-- Daily should always be added unless a later config option disables it.
-- The MVP should process one day at a time.
+- A organização Azure DevOps é `https://dev.azure.com/dotzmkt`.
+- O nome do projeto será informado na configuração local.
+- Autenticação por PAT é aceitável para a primeira implementação.
+- O 7pace pode ser operado pela UI web do Azure DevOps com Playwright.
+- Daily deve ser sempre adicionada, a menos que uma opção futura permita desativá-la.
+- O MVP deve processar um dia por vez.
