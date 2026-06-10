@@ -1,7 +1,7 @@
 {
   "azureDevOps": {
     "orgUrl": "https://dev.azure.com/dotzmkt",
-    "project": "Hour Launcher",
+    "project": "Tribos Dotz",
     "authMethod": "azure-cli",
     "defaultTeam": null
   },

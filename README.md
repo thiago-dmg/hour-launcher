@@ -15,7 +15,7 @@ Automacao local para planejar e lancar horas no Azure DevOps + 7pace TimeTracker
 2. Ajuste `azureDevOps.project`.
 3. Rode `az login` se usar `authMethod: "azure-cli"`.
 4. Rode `npm run install:browsers` para baixar o Chromium usado pelo Playwright.
-5. Rode `npm run auth:sevenpace` para salvar a sessao visual do navegador.
+5. Rode `npm run auth:sevenpace` para salvar a sessao visual do navegador. Esse comando nao lanca horas; ele apenas abre o 7pace para login/autorizacao.
 6. Crie um arquivo de atividades baseado em `config/activities.example.json`.
 7. Rode `npm run plan-day -- --activities config/activities.local.json`.
 8. Rode `npm run launch-day -- --activities config/activities.local.json`.
