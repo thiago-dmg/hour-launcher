@@ -1,0 +1,37 @@
+{
+  "azureDevOps": {
+    "orgUrl": "https://dev.azure.com/dotzmkt",
+    "project": "NOME_DO_PROJETO",
+    "authMethod": "azure-cli",
+    "defaultTeam": null
+  },
+  "sevenPace": {
+    "baseUrl": "https://dev.azure.com/dotzmkt",
+    "mode": "playwright",
+    "headless": false
+  },
+  "time": {
+    "dailyTargetMinutes": 480,
+    "defaultDailyMinutes": 30,
+    "minimumEntryMinutes": 15
+  },
+  "defaults": {
+    "dailyWorkItemId": 171055,
+    "capexStrategy": "activeAssignedUserStory"
+  },
+  "opexRules": {
+    "sustentacao": { "label": "Sustentacao", "featureId": 171057, "createUserStory": true },
+    "tarefa": { "label": "Tarefa", "featureId": 171058, "createUserStory": true },
+    "refactorManutencao": { "label": "Refactor / Manutencao", "featureId": 171466, "createUserStory": true },
+    "treinamentoFeedbackReuniaoCorporativa": { "label": "Treinamento / Feedback / Reuniao corporativa", "workItemId": 171056 },
+    "refinamentoPlanejamentoDaily": { "label": "Refinamento / Planejamento / Daily", "workItemId": 171055 },
+    "reunioes": { "label": "Reunioes", "workItemId": 171054 },
+    "dlqs": { "label": "DLQs", "workItemId": 171802 },
+    "glpi": { "label": "Chamados GLPI", "workItemId": 171804 }
+  },
+  "duplicatePolicy": {
+    "sameDateSameWorkItem": "update",
+    "allowMultipleEntriesSameWorkItem": false,
+    "validateFinalTotal": true
+  }
+}
