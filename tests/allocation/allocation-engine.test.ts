@@ -8,7 +8,7 @@ const config = {
   opexRules: {
     reunioes: { label: "Reunioes", workItemId: 171054 }
   }
-} as HourLauncherConfig;
+} as unknown as HourLauncherConfig;
 
 const capexWorkItem: WorkItemSummary = {
   id: 172980,

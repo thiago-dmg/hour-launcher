@@ -7,7 +7,7 @@ const config = {
     reunioes: { label: "Reunioes", workItemId: 171054 },
     sustentacao: { label: "Sustentacao", featureId: 171057, createUserStory: true }
   }
-} as HourLauncherConfig;
+} as unknown as HourLauncherConfig;
 
 describe("opex-mapper", () => {
   it("mapeia atividade OPEX com US fixa", () => {
