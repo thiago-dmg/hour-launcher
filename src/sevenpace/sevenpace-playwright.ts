@@ -5,10 +5,18 @@ export class SevenPacePlaywright {
   constructor(private readonly config: HourLauncherConfig["sevenPace"]) {}
 
   async openContext(): Promise<BrowserContext> {
-    return chromium.launchPersistentContext(".auth/sevenpace-profile", {
-      headless: this.config.headless,
-      viewport: { width: 1440, height: 1000 }
-    });
+    try {
+      return await chromium.launchPersistentContext(".auth/sevenpace-profile", {
+        headless: this.config.headless,
+        viewport: { width: 1440, height: 1000 }
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("Abrindo em uma sess")) {
+        throw new Error("Ja existe uma janela do Playwright/Chromium aberta com o perfil do 7pace. Feche essa janela antes de rodar o comando novamente.");
+      }
+
+      throw error;
+    }
   }
 
   async openTimesheet(date: string): Promise<{ context: BrowserContext; page: Page }> {
