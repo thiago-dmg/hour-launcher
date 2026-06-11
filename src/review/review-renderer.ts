@@ -11,8 +11,6 @@ export function renderReview(date: string, entries: PlannedEntry[]): string {
 
   lines.push("");
   lines.push(`Total: ${formatMinutes(sumMinutes(entries))}`);
-  lines.push("");
-  lines.push("Confirmar? (Sim/Nao)");
 
   return lines.join("\n");
 }

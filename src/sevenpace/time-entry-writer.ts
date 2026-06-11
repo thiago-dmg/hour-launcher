@@ -25,7 +25,7 @@ async function fillEntryForm(frame: Awaited<ReturnType<typeof getSevenPaceFrame>
   const durationInput = frame.locator(sevenPaceSelectors.durationInput).first();
   await durationInput.fill(formatDurationForSevenPace(entry.minutes));
 
-  await frame.locator(sevenPaceSelectors.descriptionInput).first().fill(entry.description);
+  await frame.locator(sevenPaceSelectors.descriptionInput).filter({ visible: true }).first().fill(entry.description);
   await frame.locator(sevenPaceSelectors.saveButton).last().click();
   await frame.page().waitForLoadState("networkidle");
 }
