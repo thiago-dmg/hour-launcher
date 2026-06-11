@@ -17,7 +17,8 @@ export function buildLaunchDayCommand(): Command {
     .option("--config <path>", "Arquivo de configuracao", "config/hour-launcher.json")
     .option("--capex-work-item-id <id>", "US principal para CAPEX, quando nao quiser usar descoberta automatica")
     .option("--capex-title <title>", "Titulo da US CAPEX manual")
-    .action(async (options: { activities: string; config: string } & CapexOptions) => {
+    .option("--yes", "Executa sem pedir confirmacao interativa", false)
+    .action(async (options: { activities: string; config: string; yes: boolean } & CapexOptions) => {
       const config = await loadConfig(options.config);
       const activityFile = await loadActivityFile(options.activities);
       const capexWorkItem = await resolveCapexWorkItem(config, options);
@@ -25,7 +26,7 @@ export function buildLaunchDayCommand(): Command {
       const plan = planDay({ date: activityFile.date, activities: activityFile.activities, config, capexWorkItem });
       console.log(renderReview(plan.date, plan.entries));
 
-      if (!(await confirmReview())) {
+      if (!options.yes && !(await confirmReview())) {
         await writeRunLog({ date: plan.date, entries: plan.entries, result: "failed", errorMessage: "Usuario cancelou a revisao." });
         console.log("Lancamento cancelado.");
         return;

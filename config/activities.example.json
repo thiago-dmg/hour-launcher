@@ -1,10 +1,4 @@
 {
   "date": "2026-06-10",
-  "activities": [
-    {
-      "type": "reunioes",
-      "minutes": 30,
-      "description": "Alinhamento tecnico"
-    }
-  ]
+  "activities": []
 }
