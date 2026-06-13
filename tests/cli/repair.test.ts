@@ -43,7 +43,7 @@ vi.mock("../../src/sevenpace/time-entry-writer.js", () => ({
   updateTimeEntryWorkItem
 }));
 
-describe("repair-capex-task-targets command", () => {
+describe("repair command", () => {
   beforeEach(() => {
     closeContext.mockClear();
     readEntriesForDate.mockReset();
@@ -55,9 +55,9 @@ describe("repair-capex-task-targets command", () => {
   });
 
   test("patches US-targeted CAPEX worklogs to child Tasks", async () => {
-    const { buildRepairCapexTaskTargetsCommand } = await import("../../src/cli/commands/repair-capex-task-targets.js");
+    const { buildRepairCommand } = await import("../../src/cli/commands/repair.js");
 
-    await buildRepairCapexTaskTargetsCommand().parseAsync([
+    await buildRepairCommand().parseAsync([
       "node",
       "test",
       "--activities",
@@ -73,7 +73,7 @@ describe("repair-capex-task-targets command", () => {
   });
 
   test("moves duplicated Task worklogs to unused child Tasks", async () => {
-    const { buildCapexTaskRepairActions } = await import("../../src/cli/commands/repair-capex-task-targets.js");
+    const { buildCapexTaskRepairActions } = await import("../../src/cli/commands/repair.js");
 
     expect(buildCapexTaskRepairActions({
       entries: [
@@ -92,7 +92,7 @@ describe("repair-capex-task-targets command", () => {
   });
 
   test("prefers child Tasks from the same parent US being repaired", async () => {
-    const { pickUnusedTaskForParent } = await import("../../src/cli/commands/repair-capex-task-targets.js");
+    const { pickUnusedTaskForParent } = await import("../../src/cli/commands/repair.js");
 
     expect(pickUnusedTaskForParent([
       { id: 172192, title: "Other US Task", state: "Done", workItemType: "Task", parentId: 171873 },
@@ -101,7 +101,7 @@ describe("repair-capex-task-targets command", () => {
   });
 
   test("falls back to another user-owned Task when the same parent US has no unused Tasks", async () => {
-    const { pickUnusedTaskForParent } = await import("../../src/cli/commands/repair-capex-task-targets.js");
+    const { pickUnusedTaskForParent } = await import("../../src/cli/commands/repair.js");
 
     expect(pickUnusedTaskForParent([
       { id: 172192, title: "Same US already used", state: "Done", workItemType: "Task", parentId: 171873 },
@@ -110,7 +110,7 @@ describe("repair-capex-task-targets command", () => {
   });
 
   test("fails before patching when there are not enough unused Tasks", async () => {
-    const { buildCapexTaskRepairActions } = await import("../../src/cli/commands/repair-capex-task-targets.js");
+    const { buildCapexTaskRepairActions } = await import("../../src/cli/commands/repair.js");
 
     expect(() => buildCapexTaskRepairActions({
       entries: [

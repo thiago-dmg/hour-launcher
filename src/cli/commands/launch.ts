@@ -12,8 +12,8 @@ import { writeRunLog } from "../../storage/run-log-store.js";
 import type { WorkItemSummary } from "../../types/domain.js";
 import { resolveConfiguredCapexWorkItem, type CapexOptions } from "../capex-work-item.js";
 
-export function buildLaunchMissingDaysCommand(): Command {
-  return new Command("launch-missing-days")
+export function buildLaunchCommand(): Command {
+  return new Command("launch")
     .requiredOption("--activities <path>", "Arquivo JSON com data inicial e atividades padrao")
     .option("--config <path>", "Arquivo de configuracao", "config/hour-launcher.json")
     .option("--until <date>", "Data final inclusiva em YYYY-MM-DD", todayIsoLocal())

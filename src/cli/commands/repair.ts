@@ -14,8 +14,8 @@ type CapexTaskRepairAction = {
   date: string;
 };
 
-export function buildRepairCapexTaskTargetsCommand(): Command {
-  return new Command("repair-capex-task-targets")
+export function buildRepairCommand(): Command {
+  return new Command("repair")
     .requiredOption("--activities <path>", "Arquivo JSON com data inicial")
     .option("--config <path>", "Arquivo de configuracao", "config/hour-launcher.json")
     .option("--until <date>", "Data final inclusiva em YYYY-MM-DD", todayIsoLocal())

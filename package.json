@@ -12,12 +12,8 @@
     "test:watch": "vitest",
     "init-config": "tsx src/cli/index.ts init-config",
     "install:browsers": "playwright install chromium",
-    "plan-day": "tsx src/cli/index.ts plan-day",
-    "launch-day": "tsx src/cli/index.ts launch-day",
-    "launch-missing-days": "tsx src/cli/index.ts launch-missing-days",
-    "repair-capex-task-targets": "tsx src/cli/index.ts repair-capex-task-targets",
-    "capture-sevenpace": "tsx src/cli/index.ts capture-sevenpace",
-    "auth:sevenpace": "tsx src/cli/index.ts auth-sevenpace"
+    "launch": "tsx src/cli/index.ts launch",
+    "repair": "tsx src/cli/index.ts repair"
   },
   "dependencies": {
     "@playwright/test": "^1.44.0",

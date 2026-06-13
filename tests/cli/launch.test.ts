@@ -50,7 +50,7 @@ vi.mock("../../src/storage/run-log-store.js", () => ({
   writeRunLog
 }));
 
-describe("launch-missing-days command", () => {
+describe("launch command", () => {
   const writtenDates = new Set<string>();
 
   beforeEach(() => {
@@ -79,9 +79,9 @@ describe("launch-missing-days command", () => {
   });
 
   test("skips completed weekdays and launches missing weekdays through today", async () => {
-    const { buildLaunchMissingDaysCommand } = await import("../../src/cli/commands/launch-missing-days.js");
+    const { buildLaunchCommand } = await import("../../src/cli/commands/launch.js");
 
-    await buildLaunchMissingDaysCommand().parseAsync([
+    await buildLaunchCommand().parseAsync([
       "node",
       "test",
       "--activities",
@@ -104,7 +104,7 @@ describe("launch-missing-days command", () => {
   });
 
   test("does not reuse a CAPEX task that was already logged on a previous day", async () => {
-    const { selectUnusedCapexWorkItems } = await import("../../src/cli/commands/launch-missing-days.js");
+    const { selectUnusedCapexWorkItems } = await import("../../src/cli/commands/launch.js");
 
     expect(selectUnusedCapexWorkItems([
       { id: 173500, title: "Ja usada", state: "Done", workItemType: "Task" },
