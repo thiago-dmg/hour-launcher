@@ -13,7 +13,9 @@
     "init-config": "tsx src/cli/index.ts init-config",
     "install:browsers": "playwright install chromium",
     "launch": "tsx src/cli/index.ts launch",
-    "repair": "tsx src/cli/index.ts repair"
+    "repair": "tsx src/cli/index.ts repair",
+    "setup-scheduler": "tsx scripts/setup-scheduler.ts install",
+    "remove-scheduler": "tsx scripts/setup-scheduler.ts remove"
   },
   "dependencies": {
     "@playwright/test": "^1.44.0",

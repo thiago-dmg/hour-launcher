@@ -9,10 +9,12 @@ O fluxo atual nao preenche campos na tela. O Chromium e usado para autenticar e 
 ```bash
 npm run launch -- --activities config/activities.local.json --yes
 npm run repair -- --activities config/activities.local.json --yes
+npm run setup-scheduler
 ```
 
 - `launch`: lanca dias uteis faltantes da data inicial do arquivo de atividades ate hoje.
 - `repair`: repara lancamentos CAPEX antigos que ficaram na US pai ou em Tasks repetidas.
+- `setup-scheduler`: agenda o `launch` automaticamente de segunda a sexta as 18:10.
 
 ## Setup rapido
 
@@ -27,6 +29,29 @@ npm run build
 Depois ajuste `config/hour-launcher.json` e `config/activities.local.json`.
 
 No primeiro uso, o navegador pode pedir login/autorizacao do Azure DevOps/7pace. Faca o login na janela aberta e rode o comando novamente.
+
+## Agendamento automatico
+
+```bash
+npm run setup-scheduler
+```
+
+O comando funciona em Windows, Linux e macOS:
+
+- Windows: cria uma tarefa no Agendador de Tarefas.
+- Linux/macOS: cria um bloco no `crontab`.
+
+Para alterar o horario:
+
+```bash
+npm run setup-scheduler -- --time 18:30
+```
+
+Para remover:
+
+```bash
+npm run remove-scheduler
+```
 
 ## Regra de lancamento
 

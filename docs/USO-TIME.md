@@ -79,6 +79,38 @@ Exemplo de comportamento:
 - Se 2026-05-26 esta vazio, cria Daily 0h30 + Task CAPEX 7h30.
 - Se 2026-05-27 tem 4h lancadas, completa so as 4h faltantes.
 
+## Agendamento automatico diario
+
+Para nao precisar rodar manualmente todo dia:
+
+```bash
+npm run setup-scheduler
+```
+
+Por padrao, isso agenda o lancamento de segunda a sexta as 18:10.
+
+O mesmo comando funciona nos principais sistemas:
+
+| Sistema | Como agenda |
+| --- | --- |
+| Windows | Agendador de Tarefas |
+| Linux | `crontab` |
+| macOS | `crontab` |
+
+Para escolher outro horario:
+
+```bash
+npm run setup-scheduler -- --time 18:30
+```
+
+Para remover o agendamento:
+
+```bash
+npm run remove-scheduler
+```
+
+Observacao: o comando ainda depende da sessao autenticada do usuario. Se o 7pace/Azure DevOps pedir login novamente, abra o projeto, rode `npm run launch -- --activities config/activities.local.json --yes`, autentique no navegador e depois o agendamento volta a funcionar.
+
 ## Reparar lancamentos antigos
 
 Use quando existirem lancamentos CAPEX antigos na US pai ou quando uma Task foi repetida em mais de um dia.
