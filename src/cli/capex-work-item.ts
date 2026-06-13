@@ -8,9 +8,9 @@ export type CapexOptions = {
 };
 
 export async function resolveCapexWorkItem(config: HourLauncherConfig, options: CapexOptions): Promise<WorkItemSummary> {
-  const manualId = options.capexWorkItemId ? Number(options.capexWorkItemId) : config.defaults.capexWorkItemId;
-  if (manualId) {
-    return manualCapexWorkItem(manualId, options.capexTitle);
+  const configuredWorkItem = resolveConfiguredCapexWorkItem(config, options);
+  if (configuredWorkItem) {
+    return configuredWorkItem;
   }
 
   try {
@@ -31,6 +31,11 @@ export async function resolveCapexWorkItem(config: HourLauncherConfig, options: 
 
     throw error;
   }
+}
+
+export function resolveConfiguredCapexWorkItem(config: HourLauncherConfig, options: CapexOptions): WorkItemSummary | undefined {
+  const manualId = options.capexWorkItemId ? Number(options.capexWorkItemId) : config.defaults.capexWorkItemId;
+  return manualId ? manualCapexWorkItem(manualId, options.capexTitle) : undefined;
 }
 
 function isExecutableMissingError(error: unknown, executable: string): boolean {

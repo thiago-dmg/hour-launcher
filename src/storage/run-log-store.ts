@@ -6,7 +6,7 @@ export type RunLog = {
   date: string;
   plannedHash: string;
   entries: PlannedEntry[];
-  result: "planned" | "written" | "failed";
+  result: "planned" | "written" | "failed" | "skipped";
   finalTotalMinutes?: number;
   errorMessage?: string;
   createdAt: string;

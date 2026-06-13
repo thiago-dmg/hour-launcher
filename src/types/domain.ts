@@ -56,6 +56,8 @@ export type WorkItemSummary = {
   state: string;
   assignedTo?: string;
   workItemType: string;
+  createdDate?: string;
+  parentId?: WorkItemId;
 };
 
 export type PlannedEntry = {
@@ -66,4 +68,5 @@ export type PlannedEntry = {
   description: string;
   category: "CAPEX" | "OPEX";
   source: "daily" | "activity" | "remainder";
+  startMinutes?: number;
 };

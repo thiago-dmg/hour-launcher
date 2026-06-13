@@ -9,10 +9,31 @@ export type PlanDayInput = {
   capexWorkItem: WorkItemSummary;
 };
 
+export type PlanDayWithCapexPoolInput = {
+  date: string;
+  activities: ActivityInput[];
+  config: HourLauncherConfig;
+  capexWorkItems: WorkItemSummary[];
+  existingEntries: ExistingEntrySummary[];
+};
+
 export type DayPlan = {
   date: string;
   entries: PlannedEntry[];
   totalMinutes: number;
+};
+
+export type ExistingEntrySummary = {
+  date?: string;
+  workItemId: number;
+  minutes: number;
+  description?: string;
+};
+
+export type ApplyExistingEntriesInput = {
+  plan: DayPlan;
+  existingEntries: ExistingEntrySummary[];
+  dailyTargetMinutes: number;
 };
 
 export function planDay(input: PlanDayInput): DayPlan {
@@ -80,4 +101,98 @@ export function planDay(input: PlanDayInput): DayPlan {
   }
 
   return { date: input.date, entries, totalMinutes };
+}
+
+export function planDayWithCapexPool(input: PlanDayWithCapexPoolInput): DayPlan {
+  const firstCapexWorkItem = input.capexWorkItems[0];
+  if (!firstCapexWorkItem) {
+    throw new Error("Nenhuma User Story CAPEX ativa atribuida ao usuario foi encontrada.");
+  }
+
+  const fullPlan = planDay({
+    date: input.date,
+    activities: input.activities,
+    config: input.config,
+    capexWorkItem: firstCapexWorkItem
+  });
+  const remainingPlan = applyExistingEntriesToPlan({
+    plan: fullPlan,
+    existingEntries: input.existingEntries,
+    dailyTargetMinutes: input.config.time.dailyTargetMinutes
+  });
+
+  let startMinutes = 10 * 60 + sumMinutes(input.existingEntries);
+
+  return {
+    ...remainingPlan,
+    entries: remainingPlan.entries.map((entry) => {
+      const entryStartMinutes = startMinutes;
+      startMinutes += entry.minutes;
+
+      if (entry.category !== "CAPEX" || sumMinutes(input.existingEntries.filter((existing) => existing.workItemId === entry.workItemId)) === 0) {
+        return { ...entry, startMinutes: entryStartMinutes };
+      }
+
+      const nextCapexWorkItem = input.capexWorkItems.find((workItem) =>
+        workItem.id !== entry.workItemId &&
+        sumMinutes(input.existingEntries.filter((existing) => existing.workItemId === workItem.id)) === 0
+      );
+
+      if (!nextCapexWorkItem) {
+        return { ...entry, startMinutes: entryStartMinutes };
+      }
+
+      return {
+        ...entry,
+        label: `US ${nextCapexWorkItem.id}`,
+        workItemId: nextCapexWorkItem.id,
+        description: nextCapexWorkItem.title,
+        startMinutes: entryStartMinutes
+      };
+    })
+  };
+}
+
+export function applyExistingEntriesToPlan(input: ApplyExistingEntriesInput): DayPlan {
+  const existingTotalMinutes = sumMinutes(input.existingEntries);
+  const remainingTargetMinutes = input.dailyTargetMinutes - existingTotalMinutes;
+
+  if (remainingTargetMinutes < 0) {
+    throw new Error(`Total ja lancado excede a meta diaria: ${existingTotalMinutes}`);
+  }
+
+  if (remainingTargetMinutes === 0) {
+    return { date: input.plan.date, entries: [], totalMinutes: 0 };
+  }
+
+  const entries: PlannedEntry[] = [];
+  let remainingToLaunch = remainingTargetMinutes;
+
+  for (const plannedEntry of input.plan.entries.filter((entry) => entry.source !== "remainder")) {
+    if (remainingToLaunch <= 0) {
+      break;
+    }
+
+    const alreadyLoggedForWorkItem = sumMinutes(input.existingEntries.filter((entry) => entry.workItemId === plannedEntry.workItemId));
+    const missingMinutes = Math.max(0, plannedEntry.minutes - alreadyLoggedForWorkItem);
+    const minutesToLaunch = Math.min(missingMinutes, remainingToLaunch);
+
+    if (minutesToLaunch <= 0) {
+      continue;
+    }
+
+    entries.push({ ...plannedEntry, minutes: minutesToLaunch });
+    remainingToLaunch -= minutesToLaunch;
+  }
+
+  if (remainingToLaunch > 0) {
+    const remainderEntry = input.plan.entries.find((entry) => entry.source === "remainder");
+    if (!remainderEntry) {
+      throw new Error("Nao foi possivel encontrar uma entrada CAPEX para completar o restante do dia.");
+    }
+
+    entries.push({ ...remainderEntry, minutes: remainingToLaunch });
+  }
+
+  return { date: input.plan.date, entries, totalMinutes: sumMinutes(entries) };
 }
