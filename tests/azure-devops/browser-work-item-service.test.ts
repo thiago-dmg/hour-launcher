@@ -1,5 +1,5 @@
-import { describe, expect, test } from "vitest";
-import { buildAssignedChildTasksWiql, buildAssignedUserStoriesWiql, chooseTaskDetails, extractChildWorkItemIds, sortWorkItemsByCreatedDate } from "../../src/azure-devops/browser-work-item-service.js";
+import { describe, expect, test, vi } from "vitest";
+import { browserFetch, buildAssignedChildTasksWiql, buildAssignedUserStoriesWiql, chooseTaskDetails, extractChildWorkItemIds, isRecoverableNavigationError, sortWorkItemsByCreatedDate } from "../../src/azure-devops/browser-work-item-service.js";
 import type { WorkItemSummary } from "../../src/types/domain.js";
 
 describe("extractChildWorkItemIds", () => {
@@ -52,5 +52,28 @@ describe("chooseTaskDetails", () => {
 
   test("falls back to all child tasks when child tasks are not individually assigned", () => {
     expect(chooseTaskDetails([], [173501, 173502])).toEqual([173501, 173502]);
+  });
+});
+
+describe("browserFetch", () => {
+  test("retries once when Azure DevOps is still navigating after login redirect", async () => {
+    const evaluate = vi.fn()
+      .mockRejectedValueOnce(new Error("Execution context was destroyed, most likely because of a navigation."))
+      .mockResolvedValueOnce({ ok: true });
+    const waitForLoadState = vi.fn(async () => undefined);
+    const waitForURL = vi.fn(async () => undefined);
+
+    await expect(browserFetch({ evaluate, waitForLoadState, waitForURL } as never, "https://example.test/_apis/test"))
+      .resolves.toEqual({ ok: true });
+
+    expect(evaluate).toHaveBeenCalledTimes(2);
+    expect(waitForLoadState).toHaveBeenCalled();
+  });
+});
+
+describe("isRecoverableNavigationError", () => {
+  test("detects Playwright navigation context errors", () => {
+    expect(isRecoverableNavigationError(new Error("Execution context was destroyed, most likely because of a navigation."))).toBe(true);
+    expect(isRecoverableNavigationError(new Error("Target page, context or browser has been closed"))).toBe(false);
   });
 });

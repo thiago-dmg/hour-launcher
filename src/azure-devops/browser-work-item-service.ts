@@ -12,6 +12,7 @@ type WorkItemsResponse = {
 
 export async function findActiveAssignedUserStoriesFromBrowser(page: Page, config: HourLauncherConfig): Promise<WorkItemSummary[]> {
   const projectUrl = config.sevenPace.baseUrl;
+  await waitForAzureDevOpsReady(page, projectUrl);
   const wiql = {
     query: buildAssignedUserStoriesWiql()
   };
@@ -137,24 +138,55 @@ export function sortWorkItemsByCreatedDate<T extends WorkItemSummary>(workItems:
   });
 }
 
-async function browserFetch<T>(page: Page, url: string, options: { method?: "GET" | "POST"; body?: unknown } = {}): Promise<T> {
+export async function browserFetch<T>(page: Page, url: string, options: { method?: "GET" | "POST"; body?: unknown } = {}): Promise<T> {
+  try {
+    return await evaluateBrowserFetch<T>(page, url, options);
+  } catch (error) {
+    if (!isRecoverableNavigationError(error)) {
+      throw error;
+    }
+
+    await waitForPageReady(page, url);
+    return evaluateBrowserFetch<T>(page, url, options);
+  }
+}
+
+async function evaluateBrowserFetch<T>(page: Page, url: string, options: { method?: "GET" | "POST"; body?: unknown } = {}): Promise<T> {
   return page.evaluate(
-    async ({ requestUrl, requestOptions }) => {
-      const response = await fetch(requestUrl, {
-        method: requestOptions.method ?? "GET",
-        credentials: "include",
-        headers: requestOptions.body ? { "Content-Type": "application/json" } : undefined,
-        body: requestOptions.body ? JSON.stringify(requestOptions.body) : undefined
-      });
+      async ({ requestUrl, requestOptions }) => {
+        const response = await fetch(requestUrl, {
+          method: requestOptions.method ?? "GET",
+          credentials: "include",
+          headers: requestOptions.body ? { "Content-Type": "application/json" } : undefined,
+          body: requestOptions.body ? JSON.stringify(requestOptions.body) : undefined
+        });
 
-      if (!response.ok) {
-        throw new Error(`Azure DevOps via navegador falhou ${response.status}: ${await response.text()}`);
-      }
+        if (!response.ok) {
+          throw new Error(`Azure DevOps via navegador falhou ${response.status}: ${await response.text()}`);
+        }
 
-      return response.json();
-    },
-    { requestUrl: url, requestOptions: options }
-  ) as Promise<T>;
+        return response.json();
+      },
+      { requestUrl: url, requestOptions: options }
+    ) as Promise<T>;
+}
+
+export function isRecoverableNavigationError(error: unknown): boolean {
+  return error instanceof Error && (
+    error.message.includes("Execution context was destroyed") ||
+    error.message.includes("most likely because of a navigation")
+  );
+}
+
+async function waitForAzureDevOpsReady(page: Page, projectUrl: string): Promise<void> {
+  await waitForPageReady(page, projectUrl);
+}
+
+async function waitForPageReady(page: Page, url: string): Promise<void> {
+  const origin = new URL(url).origin;
+  await page.waitForLoadState("domcontentloaded").catch(() => undefined);
+  await page.waitForLoadState("load").catch(() => undefined);
+  await page.waitForURL((currentUrl) => currentUrl.origin === origin, { timeout: 60000 }).catch(() => undefined);
 }
 
 function formatAssignedTo(value: unknown): string | undefined {
