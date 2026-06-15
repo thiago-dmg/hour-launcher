@@ -73,4 +73,32 @@ describe("sevenPaceFetch", () => {
     expect(firstEvaluate).toHaveBeenCalledTimes(1);
     expect(secondEvaluate).toHaveBeenCalledTimes(1);
   });
+
+  test("reacquires the 7pace iframe and retries when the frame is detached during a write", async () => {
+    const firstEvaluate = vi.fn()
+      .mockRejectedValueOnce(new Error("Frame was detached"));
+    const secondEvaluate = vi.fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, text: "{\"data\":{\"id\":\"created\"}}" });
+    const waitForLoadState = vi.fn(async () => undefined);
+    const refreshedFrame = {
+      url: () => "https://timehub.7pace.com/monthly",
+      evaluate: secondEvaluate
+    };
+    const page = {
+      waitForLoadState,
+      frames: () => [refreshedFrame],
+      waitForTimeout: vi.fn(async () => undefined)
+    };
+    const frame = {
+      evaluate: firstEvaluate,
+      page: () => page
+    };
+
+    await expect(sevenPaceFetch(frame as never, "workLogs", { method: "POST", body: { workItemId: 170031 } }))
+      .resolves.toEqual({ id: "created" });
+
+    expect(firstEvaluate).toHaveBeenCalledTimes(1);
+    expect(secondEvaluate).toHaveBeenCalledTimes(1);
+    expect(waitForLoadState).toHaveBeenCalled();
+  });
 });

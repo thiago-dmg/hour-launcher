@@ -14,16 +14,35 @@ type BrowserFetchResult = {
 };
 
 export async function sevenPaceFetch<T>(frame: Frame, path: string, options: SevenPaceFetchOptions = {}): Promise<T> {
-  let result = await sevenPaceBrowserFetch(frame, path, options);
+  const page = frame.page();
+  let result: BrowserFetchResult;
+
+  try {
+    result = await sevenPaceBrowserFetch(frame, path, options);
+  } catch (error) {
+    if (!isRecoverableFrameError(error)) {
+      throw error;
+    }
+
+    await page.waitForLoadState("domcontentloaded").catch(() => undefined);
+    await page.waitForLoadState("networkidle").catch(() => undefined);
+    result = await sevenPaceBrowserFetch(await getSevenPaceFrame(page), path, options);
+  }
 
   if (result.status === 401) {
-    const page = frame.page();
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle").catch(() => undefined);
     result = await sevenPaceBrowserFetch(await getSevenPaceFrame(page), path, options);
   }
 
   return parseSevenPaceResponse<T>(result);
+}
+
+export function isRecoverableFrameError(error: unknown): boolean {
+  return error instanceof Error && (
+    error.message.includes("Frame was detached") ||
+    error.message.includes("Execution context was destroyed")
+  );
 }
 
 async function sevenPaceBrowserFetch(frame: Frame, path: string, options: SevenPaceFetchOptions): Promise<BrowserFetchResult> {
