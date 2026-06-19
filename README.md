@@ -16,6 +16,12 @@ npm run setup-scheduler
 - `repair`: repara lancamentos CAPEX antigos que ficaram na US pai ou em Tasks repetidas.
 - `setup-scheduler`: agenda o `launch` automaticamente de segunda a sexta as 18:10.
 
+Para ignorar uma US especifica e todas as Tasks filhas dela:
+
+```bash
+npm run launch -- --activities config/activities.local.json --exclude-user-story-id 170029 --yes
+```
+
 ## Setup rapido
 
 ```bash

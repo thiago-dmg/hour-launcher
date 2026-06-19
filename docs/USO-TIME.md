@@ -21,8 +21,46 @@ Se o dia ja tiver horas parciais, ele completa somente o saldo ate 8h. Se o dia 
 4. Ordena as Tasks por data de criacao.
 5. Usa a primeira Task ainda nao usada no periodo.
 6. Nao reutiliza a mesma Task em outro dia. Se nao houver Task livre, o comando falha em vez de repetir silenciosamente.
+7. Ignora qualquer US listada em `defaults.excludedUserStoryIds` ou passada por `--exclude-user-story-id`.
 
 Isso responde a pergunta principal: ele nao lanca na US pai quando existem Tasks filhas elegiveis; ele lanca na Task do dia.
+
+## Ignorar uma US especifica
+
+Use isso quando uma US esta aberta/em desenvolvimento, mas nao deve receber horas por algum motivo externo, como dependencia de infra ou decisao do time.
+
+Pelo comando:
+
+```bash
+npm run launch -- --activities config/activities.local.json --exclude-user-story-id 170029 --yes
+```
+
+Pode passar mais de uma:
+
+```bash
+npm run launch -- --activities config/activities.local.json --exclude-user-story-id 170029 --exclude-user-story-id 173262 --yes
+```
+
+Ou por virgula:
+
+```bash
+npm run launch -- --activities config/activities.local.json --exclude-user-story-id 170029,173262 --yes
+```
+
+Para deixar fixo no config:
+
+```json
+{
+  "defaults": {
+    "dailyWorkItemId": 171055,
+    "capexStrategy": "activeAssignedUserStory",
+    "capexWorkItemId": null,
+    "excludedUserStoryIds": [170029]
+  }
+}
+```
+
+Quando uma US e ignorada, todas as Tasks filhas dela tambem ficam fora da selecao.
 
 ## Instalacao
 

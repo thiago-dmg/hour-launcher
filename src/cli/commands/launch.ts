@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { businessDaysBetween, todayIsoLocal } from "../../allocation/date-range.js";
 import { planDayWithCapexPool } from "../../allocation/allocation-engine.js";
 import { sumMinutes } from "../../allocation/time-math.js";
-import { findActiveAssignedUserStoriesFromBrowser, findChildTasksForUserStoriesFromBrowser } from "../../azure-devops/browser-work-item-service.js";
+import { filterExcludedUserStories, findActiveAssignedUserStoriesFromBrowser, findChildTasksForUserStoriesFromBrowser } from "../../azure-devops/browser-work-item-service.js";
 import { loadActivityFile, loadConfig } from "../../config/config-loader.js";
 import { renderReview } from "../../review/review-renderer.js";
 import { closeExistingSevenPaceProfileProcesses, SevenPacePlaywright } from "../../sevenpace/sevenpace-playwright.js";
@@ -19,8 +19,9 @@ export function buildLaunchCommand(): Command {
     .option("--until <date>", "Data final inclusiva em YYYY-MM-DD", todayIsoLocal())
     .option("--capex-work-item-id <id>", "US principal para CAPEX, quando nao quiser usar descoberta automatica")
     .option("--capex-title <title>", "Titulo da US CAPEX manual")
+    .option("--exclude-user-story-id <id>", "Ignora uma US e todas as suas Tasks filhas. Pode repetir ou usar virgula.", collectWorkItemIds, [])
     .option("--yes", "Executa sem pedir confirmacao interativa", false)
-    .action(async (options: { activities: string; config: string; until: string; yes: boolean } & CapexOptions) => {
+    .action(async (options: { activities: string; config: string; until: string; yes: boolean; excludeUserStoryId: number[] } & CapexOptions) => {
       const config = await loadConfig(options.config);
       const activityFile = await loadActivityFile(options.activities);
       const dates = businessDaysBetween(activityFile.date, options.until);
@@ -30,7 +31,7 @@ export function buildLaunchCommand(): Command {
 
       try {
         const configuredCapex = resolveConfiguredCapexWorkItem(config, options);
-        const capexWorkItems = configuredCapex ? [configuredCapex] : await findCapexWorkItems(page, config);
+        const capexWorkItems = configuredCapex ? [configuredCapex] : await findCapexWorkItems(page, config, options.excludeUserStoryId);
         const usedCapexWorkItemIds = new Set<number>();
         const capexWorkItemIds = new Set(capexWorkItems.map((workItem) => workItem.id));
 
@@ -105,9 +106,9 @@ export function selectUnusedCapexWorkItems(capexWorkItems: WorkItemSummary[], us
   return unused;
 }
 
-async function findCapexWorkItems(page: Parameters<typeof findActiveAssignedUserStoriesFromBrowser>[0], config: Parameters<typeof findActiveAssignedUserStoriesFromBrowser>[1]): Promise<WorkItemSummary[]> {
+async function findCapexWorkItems(page: Parameters<typeof findActiveAssignedUserStoriesFromBrowser>[0], config: Parameters<typeof findActiveAssignedUserStoriesFromBrowser>[1], excludedUserStoryIds: number[]): Promise<WorkItemSummary[]> {
   console.log("Buscando US CAPEX e Tasks filhas automaticamente pela sessao do navegador...");
-  const userStories = await findActiveAssignedUserStoriesFromBrowser(page, config);
+  const userStories = filterExcludedUserStories(await findActiveAssignedUserStoriesFromBrowser(page, config), excludedUserStoryIds);
 
   if (userStories.length === 0) {
     throw new Error("Nenhuma User Story CAPEX ativa atribuida ao usuario foi encontrada pela sessao do navegador.");
@@ -120,6 +121,15 @@ async function findCapexWorkItems(page: Parameters<typeof findActiveAssignedUser
 
   console.log(`Task CAPEX automatica: ${tasks[0].id} - ${tasks[0].title}`);
   return tasks;
+}
+
+export function collectWorkItemIds(value: string, previous: number[]): number[] {
+  const ids = value.split(",").map((part) => Number(part.trim())).filter((id) => Number.isInteger(id) && id > 0);
+  if (ids.length === 0) {
+    throw new Error(`Work item invalido para exclusao: ${value}`);
+  }
+
+  return [...previous, ...ids];
 }
 
 async function closeContextOrKillProfile(context: Awaited<ReturnType<SevenPacePlaywright["openContext"]>>): Promise<void> {

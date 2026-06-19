@@ -17,6 +17,10 @@ vi.mock("../../src/config/config-loader.js", () => ({
 }));
 
 vi.mock("../../src/azure-devops/browser-work-item-service.js", () => ({
+  filterExcludedUserStories: vi.fn((userStories, excludedUserStoryIds = []) => {
+    const excluded = new Set(excludedUserStoryIds);
+    return userStories.filter((userStory: { id: number }) => !excluded.has(userStory.id));
+  }),
   findActiveAssignedUserStoriesFromBrowser: vi.fn(async () => [
     { id: 173405, title: "US", state: "Active", workItemType: "User Story" }
   ]),

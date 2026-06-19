@@ -21,7 +21,8 @@ export const configSchema = z.object({
   defaults: z.object({
     dailyWorkItemId: z.number().int().positive(),
     capexStrategy: z.literal("activeAssignedUserStory"),
-    capexWorkItemId: z.number().int().positive().nullable().optional()
+    capexWorkItemId: z.number().int().positive().nullable().optional(),
+    excludedUserStoryIds: z.array(z.number().int().positive()).optional()
   }),
   opexRules: z.record(z.object({
     label: z.string().min(1),

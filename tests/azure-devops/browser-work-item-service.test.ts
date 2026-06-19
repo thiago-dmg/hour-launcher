@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { browserFetch, buildAssignedChildTasksWiql, buildAssignedUserStoriesWiql, chooseTaskDetails, extractChildWorkItemIds, isRecoverableNavigationError, sortWorkItemsByCreatedDate } from "../../src/azure-devops/browser-work-item-service.js";
+import { browserFetch, buildAssignedChildTasksWiql, buildAssignedUserStoriesWiql, chooseTaskDetails, extractChildWorkItemIds, filterExcludedUserStories, isRecoverableNavigationError, sortWorkItemsByCreatedDate } from "../../src/azure-devops/browser-work-item-service.js";
 import type { WorkItemSummary } from "../../src/types/domain.js";
 
 describe("extractChildWorkItemIds", () => {
@@ -52,6 +52,15 @@ describe("chooseTaskDetails", () => {
 
   test("falls back to all child tasks when child tasks are not individually assigned", () => {
     expect(chooseTaskDetails([], [173501, 173502])).toEqual([173501, 173502]);
+  });
+});
+
+describe("filterExcludedUserStories", () => {
+  test("removes ignored US ids before child task discovery", () => {
+    expect(filterExcludedUserStories([
+      { id: 170029, title: "US bloqueada por infra", state: "Active", workItemType: "User Story" },
+      { id: 173405, title: "US valida", state: "Active", workItemType: "User Story" }
+    ], [170029]).map((item) => item.id)).toEqual([173405]);
   });
 });
 

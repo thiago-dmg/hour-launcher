@@ -1,11 +1,12 @@
 import { Command } from "commander";
 import { businessDaysBetween, todayIsoLocal } from "../../allocation/date-range.js";
-import { findActiveAssignedUserStoriesFromBrowser, findChildTasksForUserStoriesFromBrowser } from "../../azure-devops/browser-work-item-service.js";
+import { filterExcludedUserStories, findActiveAssignedUserStoriesFromBrowser, findChildTasksForUserStoriesFromBrowser } from "../../azure-devops/browser-work-item-service.js";
 import { loadActivityFile, loadConfig } from "../../config/config-loader.js";
 import { closeExistingSevenPaceProfileProcesses, SevenPacePlaywright } from "../../sevenpace/sevenpace-playwright.js";
 import { readEntriesForDate, type ExistingTimeEntry } from "../../sevenpace/time-entry-reader.js";
 import { updateTimeEntryWorkItem } from "../../sevenpace/time-entry-writer.js";
 import type { WorkItemSummary } from "../../types/domain.js";
+import { collectWorkItemIds } from "./launch.js";
 
 type CapexTaskRepairAction = {
   entryId: string;
@@ -19,8 +20,9 @@ export function buildRepairCommand(): Command {
     .requiredOption("--activities <path>", "Arquivo JSON com data inicial")
     .option("--config <path>", "Arquivo de configuracao", "config/hour-launcher.json")
     .option("--until <date>", "Data final inclusiva em YYYY-MM-DD", todayIsoLocal())
+    .option("--exclude-user-story-id <id>", "Ignora uma US e todas as suas Tasks filhas. Pode repetir ou usar virgula.", collectWorkItemIds, [])
     .option("--yes", "Executa sem pedir confirmacao interativa", false)
-    .action(async (options: { activities: string; config: string; until: string; yes: boolean }) => {
+    .action(async (options: { activities: string; config: string; until: string; yes: boolean; excludeUserStoryId: number[] }) => {
       const config = await loadConfig(options.config);
       const activityFile = await loadActivityFile(options.activities);
       const dates = businessDaysBetween(activityFile.date, options.until);
@@ -30,7 +32,7 @@ export function buildRepairCommand(): Command {
 
       try {
         console.log("Buscando US CAPEX e Tasks filhas automaticamente pela sessao do navegador...");
-        const userStories = await findActiveAssignedUserStoriesFromBrowser(page, config);
+        const userStories = filterExcludedUserStories(await findActiveAssignedUserStoriesFromBrowser(page, config), options.excludeUserStoryId);
         const tasks = await findChildTasksForUserStoriesFromBrowser(page, config, userStories);
         const userStoryIds = new Set(userStories.map((item) => item.id));
         const entries: ExistingTimeEntry[] = [];

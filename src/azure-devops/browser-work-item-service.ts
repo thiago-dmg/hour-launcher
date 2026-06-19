@@ -28,14 +28,14 @@ export async function findActiveAssignedUserStoriesFromBrowser(page: Page, confi
   }
 
   const details = await browserFetch<WorkItemsResponse>(page, `${projectUrl}/_apis/wit/workitems?ids=${ids.join(",")}&api-version=7.1`);
-  return details.value.map((item) => ({
+  return filterExcludedUserStories(details.value.map((item) => ({
     id: item.id,
     title: String(item.fields["System.Title"] ?? ""),
     state: String(item.fields["System.State"] ?? ""),
     assignedTo: formatAssignedTo(item.fields["System.AssignedTo"]),
     workItemType: String(item.fields["System.WorkItemType"] ?? ""),
     createdDate: formatOptionalString(item.fields["System.CreatedDate"])
-  }));
+  })), config.defaults.excludedUserStoryIds ?? []);
 }
 
 export function buildAssignedUserStoriesWiql(): string {
@@ -114,6 +114,11 @@ export function buildAssignedChildTasksWiql(childIds: number[]): string {
 
 export function chooseTaskDetails(assignedTaskIds: number[], childIds: number[]): number[] {
   return assignedTaskIds.length > 0 ? assignedTaskIds : childIds;
+}
+
+export function filterExcludedUserStories<T extends WorkItemSummary>(userStories: T[], excludedUserStoryIds: number[] = []): T[] {
+  const excluded = new Set(excludedUserStoryIds);
+  return userStories.filter((userStory) => !excluded.has(userStory.id));
 }
 
 export function extractChildWorkItemIds(item: { relations?: Array<{ rel?: string; url?: string }> }): number[] {

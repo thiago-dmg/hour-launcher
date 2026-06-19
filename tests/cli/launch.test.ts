@@ -4,6 +4,10 @@ const closeContext = vi.fn();
 const createTimeEntries = vi.fn();
 const readEntriesForDate = vi.fn();
 const writeRunLog = vi.fn();
+const findChildTasksForUserStoriesFromBrowser = vi.fn(async () => [
+  { id: 173502, title: "Task antiga", state: "Done", workItemType: "Task", parentId: 173405 },
+  { id: 173503, title: "Task nova", state: "Done", workItemType: "Task", parentId: 173405 }
+]);
 
 vi.mock("../../src/config/config-loader.js", () => ({
   loadConfig: vi.fn(async () => ({
@@ -18,10 +22,11 @@ vi.mock("../../src/config/config-loader.js", () => ({
 }));
 
 vi.mock("../../src/azure-devops/browser-work-item-service.js", () => ({
-  findChildTasksForUserStoriesFromBrowser: vi.fn(async () => [
-    { id: 173502, title: "Task antiga", state: "Done", workItemType: "Task", parentId: 173405 },
-    { id: 173503, title: "Task nova", state: "Done", workItemType: "Task", parentId: 173405 }
-  ]),
+  findChildTasksForUserStoriesFromBrowser,
+  filterExcludedUserStories: vi.fn((userStories, excludedUserStoryIds = []) => {
+    const excluded = new Set(excludedUserStoryIds);
+    return userStories.filter((userStory: { id: number }) => !excluded.has(userStory.id));
+  }),
   findActiveAssignedUserStoriesFromBrowser: vi.fn(async () => [
     { id: 173405, title: "Primeira US", state: "Active", workItemType: "User Story" },
     { id: 173406, title: "Segunda US", state: "Active", workItemType: "User Story" }
@@ -57,6 +62,7 @@ describe("launch command", () => {
     writtenDates.clear();
     closeContext.mockClear();
     createTimeEntries.mockClear();
+    findChildTasksForUserStoriesFromBrowser.mockClear();
     readEntriesForDate.mockReset();
     writeRunLog.mockClear();
     readEntriesForDate.mockImplementation(async (_page, date: string) => {
@@ -110,5 +116,24 @@ describe("launch command", () => {
       { id: 173500, title: "Ja usada", state: "Done", workItemType: "Task" },
       { id: 173501, title: "Livre", state: "Done", workItemType: "Task" }
     ], new Set([173500])).map((item) => item.id)).toEqual([173501]);
+  });
+
+  test("accepts a user story exclusion from the command line", async () => {
+    const { buildLaunchCommand } = await import("../../src/cli/commands/launch.js");
+
+    await buildLaunchCommand().parseAsync([
+      "node",
+      "test",
+      "--activities",
+      "config/activities.local.json",
+      "--until",
+      "2026-05-26",
+      "--exclude-user-story-id",
+      "173406",
+      "--yes"
+    ]);
+
+    const [, , userStories] = findChildTasksForUserStoriesFromBrowser.mock.calls[0] as unknown as [unknown, unknown, Array<{ id: number }>];
+    expect(userStories.map((item) => item.id)).toEqual([173405]);
   });
 });

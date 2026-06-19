@@ -41,6 +41,7 @@ export type HourLauncherConfig = {
     dailyWorkItemId: WorkItemId;
     capexStrategy: "activeAssignedUserStory";
     capexWorkItemId?: WorkItemId | null;
+    excludedUserStoryIds?: WorkItemId[];
   };
   opexRules: Record<string, OpexRule>;
   duplicatePolicy: {
