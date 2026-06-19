@@ -22,6 +22,23 @@ describe("config-loader", () => {
     await rm(dir, { recursive: true, force: true });
   });
 
+  it("aceita exclusoes de US vazias em configs locais antigas", async () => {
+    const dir = join(tmpdir(), `hour-launcher-${Date.now()}`);
+    await mkdir(dir, { recursive: true });
+    const path = join(dir, "config.json");
+    await writeFile(path, JSON.stringify({
+      azureDevOps: { orgUrl: "https://dev.azure.com/dotzmkt", project: "P", authMethod: "azure-cli", defaultTeam: null },
+      sevenPace: { baseUrl: "https://dev.azure.com/dotzmkt", timesheetUrl: "https://dotzmkt.visualstudio.com/Tribos%20Dotz/_apps/hub/7pace.Timetracker.Monthly", mode: "playwright", headless: false },
+      time: { dailyTargetMinutes: 480, defaultDailyMinutes: 30, minimumEntryMinutes: 15 },
+      defaults: { dailyWorkItemId: 171055, capexStrategy: "activeAssignedUserStory", capexWorkItemId: null, excludedUserStoryIds: null },
+      opexRules: {},
+      duplicatePolicy: { sameDateSameWorkItem: "update", allowMultipleEntriesSameWorkItem: false, validateFinalTotal: true }
+    }));
+
+    await expect(loadConfig(path)).resolves.toMatchObject({ defaults: { excludedUserStoryIds: [] } });
+    await rm(dir, { recursive: true, force: true });
+  });
+
   it("carrega arquivo de atividades", async () => {
     const dir = join(tmpdir(), `hour-launcher-${Date.now()}`);
     await mkdir(dir, { recursive: true });
