@@ -20,7 +20,7 @@ export const configSchema = z.object({
   }),
   defaults: z.object({
     dailyWorkItemId: z.number().int().positive(),
-    capexStrategy: z.preprocess((value) => value ?? "activeAssignedUserStory", z.literal("activeAssignedUserStory")),
+    capexStrategy: z.unknown().transform(() => "activeAssignedUserStory" as const),
     capexWorkItemId: z.number().int().positive().nullable().optional(),
     excludedUserStoryIds: z.array(z.number().int().positive()).nullish().transform((value) => value ?? [])
   }),
